@@ -14,6 +14,7 @@ public class Enemy00 : MonoBehaviour
     public GameObject fireball;
     public Collider trigger;
     public Spawner spawner;
+    public GameObject flame;
 
     private float minDistance;
     private float timeBetweenAttacks = 3f;
@@ -21,6 +22,8 @@ public class Enemy00 : MonoBehaviour
     private float hodlTime = .5f;
     private bool charging = false;
     private float hodling = 0;
+
+    private float hp = 100f;
     // Start is called before the first frame update
     void Start()
     {
@@ -42,39 +45,47 @@ public class Enemy00 : MonoBehaviour
                 Attack();
             }
         }
-        Vector3 playerPosition = World.player.transform.position;
-        if (trigger.bounds.Contains(playerPosition))
+        if (World.player)
         {
-            if (Vector3.Distance(transform.position, playerPosition) >= minDistance)
+            Vector3 playerPosition = World.player.transform.position;
+            if (trigger.bounds.Contains(playerPosition))
             {
-                Vector3 moveForce = (playerPosition - transform.position).normalized;
-                rb.AddForce(moveForce * moveSpeed * Time.fixedDeltaTime);
-                wizardAnim.SetBool("Moving", true);
+                if (Vector3.Distance(transform.position, playerPosition) >= minDistance)
+                {
+                    Vector3 moveForce = (playerPosition - transform.position).normalized;
+                    rb.AddForce(moveForce * moveSpeed * Time.fixedDeltaTime);
+                    wizardAnim.SetBool("Moving", true);
+                }
+                else
+                {
+                    wizardAnim.SetBool("Moving", false);
+                }
             }
             else
             {
                 wizardAnim.SetBool("Moving", false);
             }
-        }
-        else
-        {
-            wizardAnim.SetBool("Moving", false);
-        }
 
-        if (Vector3.Distance(transform.position, playerPosition) < 22f)
-        {
-            timeSinceLastAttack += Time.fixedDeltaTime;
-            if (timeSinceLastAttack >= timeBetweenAttacks)
+            if (Vector3.Distance(transform.position, playerPosition) < 20f)
             {
-                timeSinceLastAttack = 0;
-                timeBetweenAttacks = Random.Range(1.2f, 3f);
-                ChargeUp();
+                timeSinceLastAttack += Time.fixedDeltaTime;
+                if (timeSinceLastAttack >= timeBetweenAttacks)
+                {
+                    timeSinceLastAttack = 0;
+                    timeBetweenAttacks = Random.Range(1.2f, 3f);
+                    ChargeUp();
+                }
             }
         }
+        
 
-        if (transform.position.y <= -2f)
+        if (transform.position.y <= -8f)
         {
-            //Trigger here
+            if (World.player)
+            {
+                World.player.GetComponent<Player>().AddPoints(20);
+            }
+            Die();
         }
     }
 
@@ -97,6 +108,29 @@ public class Enemy00 : MonoBehaviour
         Vector3 targetPosition = new Vector3(targetVector.x, staffPosition.y, targetVector.z);
         GameObject newFireball = Instantiate(fireball, staffPosition, Quaternion.identity);
         Vector3 force = (targetPosition - staffPosition).normalized;
-        newFireball.GetComponent<Rigidbody>().AddForce(force * 2200f);
+        newFireball.GetComponent<Rigidbody>().AddForce(force * 2300f);
+    }
+
+    private void Die()
+    {
+        if (World.player)
+        {
+            World.player.GetComponent<Player>().AddPoints(10);
+        }
+        Instantiate(flame, transform.position, transform.rotation);
+        Destroy(gameObject);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.transform.CompareTag("PlayerFireball"))
+        {
+            hp -= collision.transform.GetComponent<Fireball>().damage;
+            Destroy(collision.gameObject);
+            if (hp <= 0)
+            {
+                Die();
+            }
+        }
     }
 }

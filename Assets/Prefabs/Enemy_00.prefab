@@ -191,6 +191,7 @@ MonoBehaviour:
     type: 3}
   trigger: {fileID: 0}
   spawner: {fileID: 0}
+  flame: {fileID: 6009702146547147617, guid: b5b016dcad1bb974c92da0b23a6b0af4, type: 3}
 --- !u!1 &8713230895522953575
 GameObject:
   m_ObjectHideFlags: 0
